@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#0b1120" />
+<title>SEO Microstock Metadata Generator</title>
+<style>
+  /* ============ RESET & TOKENS ============ */
+  :root{
+    --bg:#0b1120;
+    --bg-grad:#1e293b;
+    --card:#111827;
+    --card-2:#0f172a;
+    --border:#334155;
+    --border-2:#1e293b;
+    --text:#e5e7eb;
+    --muted:#94a3b8;
+    --accent:#22c55e;
+    --accent-dark:#16a34a;
+    --accent-soft:rgba(34,197,94,.12);
+    --danger:#f87171;
+    --danger-soft:rgba(248,113,113,.1);
+    --info:#38bdf8;
+    --warn:#fbbf24;
+    --radius:14px;
+    --radius-sm:10px;
+    --shadow:0 20px 50px rgba(0,0,0,.35);
+    --tap:44px;
+    --safe-top:env(safe-area-inset-top, 0px);
+    --safe-bottom:env(safe-area-inset-bottom, 0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+    background:radial-gradient(1200px 600px at 50% -10%, var(--bg-grad), var(--bg));
+    color:var(--text);
+    min-height:100vh;
+    min-height:100dvh;
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+    padding:
+      calc(16px + var(--safe-top))
+      max(16px, env(safe-area-inset-left))
+      calc(24px + var(--safe-bottom))
+      max(16px, env(safe-area-inset-right));
+  }
+  button, input, textarea{font:inherit;color:inherit}
+  a{color:#86efac;text-decoration:none}
+  a:hover{text-decoration:underline}
+
+  /* ============ LAYOUT ============ */
+  .container{max-width:1120px;margin:0 auto}
+
+  .app-header{
+    text-align:center;
+    margin-bottom:20px;
+  }
+  .app-header h1{
+    margin:0 0 6px;
+    font-size:clamp(20px, 5vw, 32px);
+    letter-spacing:-.03em;
+    line-height:1.15;
+    background:linear-gradient(90deg,#a7f3d0,#22c55e 60%,#4ade80);
+    -webkit-background-clip:text;
+    background-clip:text;
+    -webkit-text-fill-color:transparent;
+  }
+  .app-header p{
+    margin:0;
+    color:var(--muted);
+    font-size:clamp(13px, 2.4vw, 14px);
+    padding:0 4px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:16px;
+  }
+  @media (min-width:860px){
+    .grid{grid-template-columns:1fr 1fr;gap:20px}
+  }
+
+  .card{
+    background:linear-gradient(180deg, rgba(17,24,39,.95), rgba(15,23,42,.92));
+    border:1px solid var(--border);
+    border-radius:var(--radius);
+    padding:18px;
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(12px);
+    -webkit-backdrop-filter:blur(12px);
+  }
+  @media (min-width:640px){
+    .card{padding:22px}
+  }
+
+  .card h2{
+    margin:0 0 14px;
+    font-size:15px;
+    font-weight:700;
+    color:#f1f5f9;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .card h2::before{
+    content:"";
+    width:4px;
+    height:16px;
+    border-radius:2px;
+    background:var(--accent);
+    display:inline-block;
+  }
+
+  /* ============ FIELDS ============ */
+  .field{display:block;margin-bottom:12px}
+  .field-label{
+    display:block;
+    margin-bottom:6px;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--muted);
+    letter-spacing:.02em;
+    text-transform:uppercase;
+  }
+  .input-wrap{position:relative}
+  input[type=password],input[type=text]{
+    width:100%;
+    padding:12px 44px 12px 12px;
+    border-radius:var(--radius-sm);
+    border:1px solid var(--border);
+    background:#020617;
+    color:var(--text);
+    font-size:15px;
+    outline:none;
+    transition:border-color .15s, box-shadow .15s;
+    min-height:var(--tap);
+  }
+  input[type=password]:focus,input[type=text]:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  .toggle-eye{
+    position:absolute;
+    top:50%;
+    right:6px;
+    transform:translateY(-50%);
+    background:transparent;
+    border:0;
+    padding:8px 10px;
+    cursor:pointer;
+    color:var(--muted);
+    border-radius:8px;
+    min-width:36px;
+    min-height:36px;
+    display:grid;
+    place-items:center;
+    font-size:16px;
+  }
+  .toggle-eye:hover{color:var(--text);background:#1e293b}
+
+  .detected{
+    margin-top:8px;
+    padding:8px 10px;
+    border-radius:8px;
+    font-size:12.5px;
+    color:var(--muted);
+    background:#0f172a;
+    border:1px solid var(--border-2);
+    min-height:34px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+    transition:color .2s, border-color .2s;
+  }
+  .detected.ok{
+    color:#bbf7d0;
+    border-color:rgba(34,197,94,.35);
+    background:rgba(34,197,94,.08);
+  }
+  .detected .dot{
+    width:8px;height:8px;border-radius:50%;
+    background:var(--muted);
+    flex-shrink:0;
+    transition:background .2s;
+  }
+  .detected.ok .dot{
+    background:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
+    animation:pulse 2s infinite;
+  }
+  @keyframes pulse{
+    0%,100%{box-shadow:0 0 0 3px var(--accent-soft)}
+    50%{box-shadow:0 0 0 6px rgba(34,197,94,.05)}
+  }
+
+  /* ============ UPLOAD ============ */
+  .upload-box{
+    display:block;
+    border:2px dashed var(--border);
+    border-radius:var(--radius);
+    padding:22px 16px;
+    text-align:center;
+    cursor:pointer;
+    transition:.2s;
+    background:rgba(15,23,42,.55);
+    min-height:120px;
+  }
+  .upload-box:hover,
+  .upload-box.dragover{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+  }
+  .upload-box:active{transform:scale(.995)}
+  .upload-box input{display:none}
+  .upload-icon{
+    font-size:32px;
+    margin-bottom:6px;
+    display:block;
+    line-height:1;
+  }
+  .upload-box strong{
+    display:block;
+    margin-bottom:4px;
+    font-size:14.5px;
+    color:#f1f5f9;
+  }
+  .upload-box span{
+    display:block;
+    color:var(--muted);
+    font-size:12.5px;
+  }
+
+  #preview{
+    margin-top:12px;
+    border-radius:var(--radius-sm);
+    overflow:hidden;
+    background:#020617;
+    border:1px solid var(--border);
+    display:none;
+    animation:fadeIn .25s ease;
+  }
+  #preview img,#preview video{
+    width:100%;
+    max-height:280px;
+    display:block;
+    object-fit:contain;
+    background:#020617;
+  }
+  @media (min-width:640px){
+    #preview img,#preview video{max-height:340px}
+  }
+  @keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+  #fileInfo{
+    margin-top:10px;
+    padding:8px 10px;
+    background:#0f172a;
+    border:1px solid var(--border-2);
+    border-radius:8px;
+    color:var(--muted);
+    font-size:12.5px;
+    word-break:break-word;
+    display:none;
+  }
+  #fileInfo.show{display:block}
+
+  /* ============ BUTTONS ============ */
+  .actions{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:16px;
+  }
+  .actions .full{grid-column:1 / -1}
+  @media (min-width:480px){
+    .actions{grid-template-columns:1.4fr 1fr 1fr}
+    .actions .full{grid-column:auto}
+  }
+  button{
+    border:none;
+    border-radius:var(--radius-sm);
+    padding:12px 14px;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+    transition:.15s;
+    min-height:var(--tap);
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    white-space:nowrap;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+  button:disabled{opacity:.45;cursor:not-allowed}
+  .btn-primary{
+    background:linear-gradient(180deg,#22c55e,#16a34a);
+    color:#052e16;
+    box-shadow:0 4px 14px rgba(34,197,94,.25);
+  }
+  .btn-primary:not(:disabled):hover{
+    background:linear-gradient(180deg,#16a34a,#15803d);
+    color:#fff;
+    box-shadow:0 6px 18px rgba(34,197,94,.4);
+  }
+  .btn-primary:not(:disabled):active{transform:translateY(1px)}
+  .btn-secondary{
+    background:#1e293b;
+    color:var(--text);
+    border:1px solid var(--border);
+  }
+  .btn-secondary:hover{background:#273449}
+  .btn-secondary:active{transform:translateY(1px)}
+
+  .spinner{
+    width:16px;height:16px;
+    border:2px solid currentColor;
+    border-top-color:transparent;
+    border-radius:50%;
+    animation:spin .6s linear infinite;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* ============ STATUS & PROGRESS ============ */
+  #status{
+    margin-top:12px;
+    font-size:13px;
+    color:var(--muted);
+    min-height:20px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:0 2px;
+  }
+  #status.error{color:var(--danger)}
+  #status.success{color:var(--accent)}
+
+  .progress{
+    margin-top:10px;
+    height:6px;
+    border-radius:6px;
+    background:#1e293b;
+    overflow:hidden;
+    display:none;
+  }
+  .progress.show{display:block}
+  .progress .bar{
+    height:100%;
+    width:0%;
+    background:linear-gradient(90deg,#16a34a,#22c55e,#4ade80);
+    transition:width .3s ease;
+    border-radius:6px;
+  }
+
+  /* ============ OUTPUT ============ */
+  #output{
+    width:100%;
+    min-height:320px;
+    resize:vertical;
+    background:#020617;
+    color:var(--text);
+    border:1px solid var(--border);
+    border-radius:var(--radius-sm);
+    padding:14px;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    font-size:13px;
+    line-height:1.65;
+    outline:none;
+    transition:border-color .15s, box-shadow .15s;
+  }
+  #output:focus{
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  @media (min-width:860px){
+    #output{min-height:480px}
+  }
+
+  /* ============ NOTE ============ */
+  .note{
+    margin-top:14px;
+    padding:10px 12px;
+    border-radius:10px;
+    background:rgba(56,189,248,.06);
+    border:1px solid rgba(56,189,248,.22);
+    color:#bae6fd;
+    font-size:12.5px;
+    line-height:1.55;
+  }
+  .note b{color:#7dd3fc}
+
+  /* ============ TOAST ============ */
+  .toast{
+    position:fixed;
+    bottom:calc(20px + var(--safe-bottom));
+    left:50%;
+    transform:translateX(-50%) translateY(20px);
+    background:#0f172a;
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:11px 18px;
+    border-radius:12px;
+    font-size:13.5px;
+    font-weight:600;
+    box-shadow:0 10px 30px rgba(0,0,0,.5);
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s, transform .25s;
+    z-index:9999;
+    max-width:calc(100vw - 32px);
+    text-align:center;
+  }
+  .toast.show{
+    opacity:1;
+    transform:translateX(-50%) translateY(0);
+  }
+  .toast.success{border-color:rgba(34,197,94,.5);color:#bbf7d0}
+  .toast.error{border-color:rgba(248,113,113,.5);color:#fecaca}
+
+  /* ============ ACCESSIBILITY ============ */
+  :focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{
+      animation-duration:.01ms !important;
+      transition-duration:.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header class="app-header">
+    <h1>SEO Microstock Metadata Generator</h1>
+    <p>Tempel API key apa pun → provider & model terdeteksi otomatis → upload foto/video → metadata siap pakai.</p>
+  </header>
+
+  <div class="grid">
+    <!-- ============ PANEL KIRI ============ -->
+    <section class="card">
+      <h2>Konfigurasi & Media</h2>
+
+      <div class="field">
+        <label class="field-label" for="apiKeyInput">API Key</label>
+        <div class="input-wrap">
+          <input id="apiKeyInput" type="password" placeholder="OpenAI, Gemini, Anthropic, Groq, OpenRouter…"
+                 autocomplete="off" spellcheck="false" />
+          <button class="toggle-eye" id="toggleEye" type="button" aria-label="Tampilkan/sembunyikan API key">👁</button>
+        </div>
+        <div id="detected" class="detected" aria-live="polite">
+          <span class="dot"></span>
+          <span>Provider: belum terdeteksi</span>
+        </div>
+      </div>
+
+      <label class="upload-box" for="fileInput" id="dropZone">
+        <span class="upload-icon">📤</span>
+        <strong>Pilih foto / video</strong>
+        <span>atau tarik file ke sini — JPG, PNG, WEBP, MP4, MOV, WEBM</span>
+        <input id="fileInput" type="file" accept="image/*,video/*" />
+      </label>
+
+      <div id="preview"></div>
+      <div id="fileInfo"></div>
+
+      <div class="actions">
+        <button id="generateBtn" class="btn-primary full" disabled>
+          <span id="generateLabel">Generate Metadata</span>
+        </button>
+        <button id="copyBtn" class="btn-secondary" disabled>Copy</button>
+        <button id="clearBtn" class="btn-secondary">Reset</button>
+      </div>
+
+      <div id="status" aria-live="polite"></div>
+      <div class="progress" id="progress"><div class="bar" id="progressBar"></div></div>
+
+      <div class="note">
+        <b>Didukung:</b> OpenAI (sk-…), Anthropic (sk-ant-…), Gemini (AIza… / AQ.Ab…),
+        Groq (gsk_…), OpenRouter (sk-or-v1-…), xAI (xai-…).<br>
+        <b>Video native:</b> hanya Gemini. Provider lain memakai frame pertama video.
+      </div>
+    </section>
+
+    <!-- ============ PANEL KANAN ============ -->
+    <section class="card">
+      <h2>Hasil Metadata SEO</h2>
+      <textarea id="output" readonly aria-label="Hasil metadata SEO"
+                placeholder="Hasil metadata akan muncul di sini…"></textarea>
+    </section>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   PROMPT
+   ============================================================ */
+const PROMPT = `You are a senior SEO expert for Adobe Stock, Shutterstock, and Freepik.
+Analyze the attached media and respond ONLY in this exact format (no preamble, no closing, no markdown, no bullets):
+
+Title:
+[Descriptive, accurate, commercial English title. Max 70-80 characters. Do NOT use subjective words like beautiful/amazing/best/stunning.]
+
+Description:
+[1-2 sentences in English describing the main object, background, mood, colors, and context of the scene.]
+
+Keywords:
+[30-40 most relevant English keywords, ordered from most specific to most general. Separate ONLY with commas. Include concept, color, object, action, and background keywords.]
+
+Kategori Adobe Stock yang Disarankan:
+[Exactly one official Adobe Stock category, e.g. Technology, People, Business, Buildings, Nature, Transport, Food, Abstract, etc.]`;
+
+/* ============================================================
+   DETEKSI PROVIDER
+   ============================================================ */
+function detectProvider(key) {
+  const k = (key || "").trim();
+  if (!k) return { id: "unknown", label: "Belum terdeteksi", model: null };
+  if (k.startsWith("sk-or-v1-")) return { id: "openrouter", label: "OpenRouter", model: "anthropic/claude-3.5-sonnet" };
+  if (k.startsWith("sk-ant-"))   return { id: "anthropic",  label: "Anthropic (Claude)", model: "claude-3-5-sonnet-20241022" };
+  if (k.startsWith("gsk_"))      return { id: "groq",       label: "Groq", model: "llama-3.2-11b-vision-preview" };
+  if (k.startsWith("AIza") || k.startsWith("AQ.Ab")) return { id: "gemini", label: "Google Gemini", model: "gemini-2.0-flash" };
+  if (k.startsWith("sk-proj-") || k.startsWith("sk-")) return { id: "openai", label: "OpenAI", model: "gpt-4o-mini" };
+  if (k.startsWith("xai-"))      return { id: "xai",        label: "xAI (Grok)", model: "grok-2-vision-1212" };
+  return { id: "unknown", label: "Tidak dikenal", model: null };
+}
+
+/* ============================================================
+   ELEMEN
+   ============================================================ */
+const $ = (id) => document.getElementById(id);
+const fileInput = $("fileInput");
+const preview = $("preview");
+const fileInfo = $("fileInfo");
+const apiKeyInput = $("apiKeyInput");
+const toggleEye = $("toggleEye");
+const detectedEl = $("detected");
+const generateBtn = $("generateBtn");
+const generateLabel = $("generateLabel");
+const copyBtn = $("copyBtn");
+const clearBtn = $("clearBtn");
+const statusEl = $("status");
+const output = $("output");
+const progress = $("progress");
+const progressBar = $("progressBar");
+const dropZone = $("dropZone");
+const toastEl = $("toast");
+
+let selectedFile = null;
+let busy = false;
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+function setStatus(msg, type = "") {
+  statusEl.className = type || "";
+  statusEl.textContent = msg || "";
+}
+function setProgress(p) {
+  if (p === null) {
+    progress.classList.remove("show");
+    progressBar.style.width = "0%";
+  } else {
+    progress.classList.add("show");
+    progressBar.style.width = Math.min(100, Math.max(0, p)) + "%";
+  }
+}
+function toast(msg, type = "success", ms = 2200) {
+  toastEl.textContent = msg;
+  toastEl.className = "toast show " + type;
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => toastEl.classList.remove("show"), ms);
+}
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(",")[1]);
+    r.onerror = () => rej(new Error("Gagal membaca file."));
+    r.readAsDataURL(file);
+  });
+}
+function dataURL(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result);
+    r.onerror = () => rej(new Error("Gagal membaca file."));
+    r.readAsDataURL(file);
+  });
+}
+function setBusy(state) {
+  busy = state;
+  generateBtn.disabled = state || !selectedFile;
+  generateLabel.innerHTML = state
+    ? '<span class="spinner"></span> Memproses…'
+    : "Generate Metadata";
+  copyBtn.disabled = state || !output.value.trim();
+  clearBtn.disabled = state;
+}
+
+/* ============================================================
+   API KEY DETECTION
+   ============================================================ */
+apiKeyInput.addEventListener("input", () => {
+  const p = detectProvider(apiKeyInput.value);
+  if (p.id === "unknown") {
+    detectedEl.classList.remove("ok");
+    detectedEl.innerHTML = '<span class="dot"></span><span>Provider: belum terdeteksi</span>';
+  } else {
+    detectedEl.classList.add("ok");
+    detectedEl.innerHTML =
+      `<span class="dot"></span><span>Provider: <b>${p.label}</b> — model default: <code>${p.model}</code></span>`;
+  }
+});
+
+/* Toggle show/hide key */
+toggleEye.addEventListener("click", () => {
+  const isPass = apiKeyInput.type === "password";
+  apiKeyInput.type = isPass ? "text" : "password";
+  toggleEye.textContent = isPass ? "🙈" : "👁";
+  toggleEye.setAttribute("aria-label", isPass ? "Sembunyikan API key" : "Tampilkan API key");
+});
+
+/* ============================================================
+   UPLOAD & DRAG-DROP
+   ============================================================ */
+["dragenter","dragover"].forEach(ev =>
+  dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.add("dragover"); })
+);
+["dragleave","drop"].forEach(ev =>
+  dropZone.addEventListener(ev, (e) => { e.preventDefault(); dropZone.classList.remove("dragover"); })
+);
+dropZone.addEventListener("drop", (e) => {
+  const f = e.dataTransfer?.files?.[0];
+  if (f) handleFile(f);
+});
+
+fileInput.addEventListener("change", (e) => {
+  const f = e.target.files?.[0];
+  if (f) handleFile(f);
+});
+
+function handleFile(file) {
+  selectedFile = file;
+  preview.innerHTML = "";
+  preview.style.display = "block";
+  output.value = "";
+  copyBtn.disabled = true;
+  setStatus("");
+  setProgress(null);
+
+  if (file.type.startsWith("image/")) {
+    const img = document.createElement("img");
+    img.alt = "Preview gambar";
+    img.src = URL.createObjectURL(file);
+    img.onload = () => URL.revokeObjectURL(img.src);
+    preview.appendChild(img);
+  } else if (file.type.startsWith("video/")) {
+    const v = document.createElement("video");
+    v.src = URL.createObjectURL(file);
+    v.controls = true;
+    v.muted = true;
+    v.playsInline = true;
+    preview.appendChild(v);
+  } else {
+    preview.style.display = "none";
+    setStatus("Format file tidak didukung.", "error");
+    fileInfo.classList.remove("show");
+    selectedFile = null;
+    generateBtn.disabled = true;
+    return;
+  }
+
+  const sizeMB = (file.size / 1024 / 1024).toFixed(2);
+  fileInfo.textContent = `📄 ${file.name} — ${sizeMB} MB — ${file.type}`;
+  fileInfo.classList.add("show");
+  generateBtn.disabled = false;
+}
+
+/* ============================================================
+   RESET & COPY
+   ============================================================ */
+clearBtn.addEventListener("click", () => {
+  if (busy) return;
+  selectedFile = null;
+  fileInput.value = "";
+  preview.innerHTML = "";
+  preview.style.display = "none";
+  fileInfo.textContent = "";
+  fileInfo.classList.remove("show");
+  output.value = "";
+  generateBtn.disabled = true;
+  copyBtn.disabled = true;
+  setStatus("");
+  setProgress(null);
+});
+
+copyBtn.addEventListener("click", async () => {
+  if (!output.value.trim()) return;
+  try {
+    await navigator.clipboard.writeText(output.value);
+    toast("Metadata disalin ke clipboard ✓", "success");
+  } catch {
+    output.select();
+    document.execCommand("copy");
+    toast("Metadata disalin ✓", "success");
+  }
+});
+
+/* ============================================================
+   GENERATE
+   ============================================================ */
+generateBtn.addEventListener("click", async () => {
+  const apiKey = apiKeyInput.value.trim();
+  if (!selectedFile) return setStatus("Pilih file dulu.", "error");
+  if (!apiKey) return setStatus("API key belum diisi.", "error");
+
+  const provider = detectProvider(apiKey);
+  if (provider.id === "unknown") {
+    return setStatus("Format API key tidak dikenali.", "error");
+  }
+
+  setBusy(true);
+  output.value = "";
+  setStatus(`Menganalisis media via ${provider.label}…`);
+  setProgress(5);
+
+  try {
+    const text = await analyzeMedia(provider, apiKey, selectedFile);
+    output.value = text.trim();
+    copyBtn.disabled = false;
+    setStatus("Metadata berhasil dibuat ✓", "success");
+    setProgress(100);
+    toast("Selesai! Metadata siap dipakai.", "success");
+  } catch (err) {
+    console.error(err);
+    setStatus("Gagal: " + err.message, "error");
+    setProgress(null);
+    toast("Gagal: " + err.message, "error", 3500);
+  } finally {
+    setBusy(false);
+    setTimeout(() => setProgress(null), 900);
+  }
+});
+
+/* ============================================================
+   CORE
+   ============================================================ */
+async function analyzeMedia(provider, apiKey, file) {
+  if (provider.id === "gemini") return callGemini(apiKey, provider.model, file);
+  if (["openai","groq","openrouter","xai"].includes(provider.id))
+    return callOpenAICompatible(provider, apiKey, file);
+  if (provider.id === "anthropic") return callAnthropic(apiKey, provider.model, file);
+  throw new Error("Provider belum didukung.");
+}
+
+/* ---------- GEMINI ---------- */
+async function callGemini(apiKey, model, file) {
+  let parts;
+  if (file.type.startsWith("video/")) {
+    setStatus("Mengunggah video ke Google File API…");
+    setProgress(15);
+    const up = await uploadGeminiVideo(apiKey, file);
+    setProgress(60);
+    setStatus("Menganalisis video…");
+    parts = [
+      { file_data: { file_uri: up.uri, mime_type: up.mimeType } },
+      { text: PROMPT }
+    ];
+  } else {
+    setStatus("Menyiapkan gambar…");
+    setProgress(30);
+    const b64 = await fileToBase64(file);
+    parts = [
+      { inline_data: { mime_type: file.type, data: b64 } },
+      { text: PROMPT }
+    ];
+  }
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{ parts }],
+        generationConfig: { temperature: 0.6, maxOutputTokens: 1024 }
+      })
+    }
+  );
+  if (!res.ok) throw new Error(parseApiError(res.status, await res.text()));
+  const data = await res.json();
+  const text = data?.candidates?.[0]?.content?.parts?.map(p => p.text).filter(Boolean).join("\n");
+  if (!text) throw new Error("Gemini tidak mengembalikan teks.");
+  return text;
+}
+
+/* ---------- OPENAI-COMPATIBLE ---------- */
+async function callOpenAICompatible(provider, apiKey, file) {
+  const baseURL = getBaseURL(provider.id);
+  let imageDataUrl;
+  if (file.type.startsWith("video/")) {
+    setStatus("Mengekstrak frame pertama video…");
+    setProgress(20);
+    imageDataUrl = await extractFirstFrame(file);
+  } else {
+    setStatus("Menyiapkan gambar…");
+    setProgress(30);
+    imageDataUrl = await dataURL(file);
+  }
+
+  const headers = {
+    "Content-Type": "application/json",
+    "Authorization": `Bearer ${apiKey}`
+  };
+  if (provider.id === "openrouter") {
+    headers["HTTP-Referer"] = window.location.origin;
+    headers["X-Title"] = "SEO Microstock Generator";
+  }
+
+  const res = await fetch(`${baseURL}/chat/completions`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      model: provider.model,
+      messages: [{
+        role: "user",
+        content: [
+          { type: "image_url", image_url: { url: imageDataUrl } },
+          { type: "text", text: PROMPT }
+        ]
+      }],
+      max_tokens: 1024,
+      temperature: 0.6
+    })
+  });
+  if (!res.ok) throw new Error(parseApiError(res.status, await res.text()));
+  const data = await res.json();
+  const text = data?.choices?.[0]?.message?.content;
+  if (!text) throw new Error("API tidak mengembalikan teks.");
+  return text;
+}
+function getBaseURL(id) {
+  return {
+    openai: "https://api.openai.com/v1",
+    groq: "https://api.groq.com/openai/v1",
+    openrouter: "https://openrouter.ai/api/v1",
+    xai: "https://api.x.ai/v1"
+  }[id] || (() => { throw new Error("Base URL tidak dikenal.") })();
+}
+
+/* ---------- ANTHROPIC ---------- */
+async function callAnthropic(apiKey, model, file) {
+  let imageDataUrl;
+  if (file.type.startsWith("video/")) {
+    setStatus("Mengekstrak frame pertama video…");
+    setProgress(20);
+    imageDataUrl = await extractFirstFrame(file);
+  } else {
+    setStatus("Menyiapkan gambar…");
+    setProgress(30);
+    imageDataUrl = await dataURL(file);
+  }
+  const base64 = imageDataUrl.split(",")[1];
+  const mediaType = imageDataUrl.split(";")[0].split(":")[1];
+
+  const res = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": apiKey,
+      "anthropic-version": "2023-06-01"
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 1024,
+      messages: [{
+        role: "user",
+        content: [
+          { type: "image", source: { type: "base64", media_type: mediaType, data: base64 } },
+          { type: "text", text: PROMPT }
+        ]
+      }]
+    })
+  });
+  if (!res.ok) throw new Error(parseApiError(res.status, await res.text()));
+  const data = await res.json();
+  const text = data?.content?.[0]?.text;
+  if (!text) throw new Error("Anthropic tidak mengembalikan teks.");
+  return text;
+}
+
+/* ---------- EXTRACT FIRST FRAME ---------- */
+function extractFirstFrame(file) {
+  return new Promise((resolve, reject) => {
+    const v = document.createElement("video");
+    v.src = URL.createObjectURL(file);
+    v.muted = true;
+    v.playsInline = true;
+
+    const cleanup = () => URL.revokeObjectURL(v.src);
+
+    v.addEventListener("loadeddata", () => { v.currentTime = 0.1; });
+    v.addEventListener("seeked", () => {
+      try {
+        const c = document.createElement("canvas");
+        c.width = v.videoWidth;
+        c.height = v.videoHeight;
+        c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
+        const url = c.toDataURL("image/jpeg", 0.9);
+        cleanup();
+        resolve(url);
+      } catch (e) {
+        cleanup();
+        reject(new Error("Gagal render frame video."));
+      }
+    });
+    v.addEventListener("error", () => {
+      cleanup();
+      reject(new Error("Gagal membaca video."));
+    });
+  });
+}
+
+/* ---------- GEMINI VIDEO UPLOAD ---------- */
+async function uploadGeminiVideo(apiKey, file) {
+  const startRes = await fetch(
+    `https://generativelanguage.googleapis.com/upload/v1beta/files?key=${encodeURIComponent(apiKey)}`,
+    {
+      method: "POST",
+      headers: {
+        "X-Goog-Upload-Protocol": "resumable",
+        "X-Goog-Upload-Command": "start",
+        "X-Goog-Upload-Header-Content-Length": String(file.size),
+        "X-Goog-Upload-Header-Content-Type": file.type || "video/mp4",
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ file: { display_name: file.name } })
+    }
+  );
+  if (!startRes.ok) throw new Error("Mulai upload: " + parseApiError(startRes.status, await startRes.text()));
+  const uploadUrl = startRes.headers.get("X-Goog-Upload-URL");
+  if (!uploadUrl) throw new Error("Upload URL tidak ditemukan.");
+
+  const up = await fetch(uploadUrl, {
+    method: "POST",
+    headers: {
+      "X-Goog-Upload-Command": "upload, finalize",
+      "X-Goog-Upload-Offset": "0",
+      "Content-Length": String(file.size)
+    },
+    body: file
+  });
+  if (!up.ok) throw new Error("Upload video: " + parseApiError(up.status, await up.text()));
+
+  let f = (await up.json()).file;
+  if (!f) throw new Error("Respons upload tidak valid.");
+
+  let attempts = 0;
+  while (f.state === "PROCESSING" && attempts < 60) {
+    attempts++;
+    setStatus(`Memproses video… (${attempts * 2}s)`);
+    setProgress(Math.min(90, 60 + attempts));
+    await new Promise(r => setTimeout(r, 2000));
+    const poll = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/${f.name}?key=${encodeURIComponent(apiKey)}`
+    );
+    if (poll.ok) f = await poll.json();
+  }
+  if (f.state !== "ACTIVE") throw new Error("Video gagal diproses. Coba MP4 lebih kecil.");
+  return { uri: f.uri, mimeType: f.mimeType };
+}
+
+/* ---------- ERROR PARSER ---------- */
+function parseApiError(status, body) {
+  try {
+    const j = JSON.parse(body);
+    return j.error?.message || `HTTP ${status}`;
+  } catch {
+    return `HTTP ${status}: ${String(body).slice(0, 180)}`;
+  }
+}
+</script>
+</body>
+</html>
