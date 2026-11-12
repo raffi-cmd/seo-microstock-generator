@@ -1,4 +1,5 @@
- <!DOCTYPE html>
+
+<!DOCTYPE html>
 <html lang="id">
 <head>
 <meta charset="UTF-8" />
@@ -7,142 +8,120 @@
 <title>SEO Microstock Metadata Generator</title>
 <style>
   :root{
-    --bg:#0b1120; --bg-grad:#1e293b; --card:#111827; --card-2:#0f172a;
-    --border:#334155; --border-2:#1e293b; --text:#e5e7eb; --muted:#94a3b8;
-    --accent:#22c55e; --accent-dark:#16a34a; --accent-soft:rgba(34,197,94,.12);
-    --danger:#f87171; --info:#38bdf8; --radius:14px; --radius-sm:10px;
-    --shadow:0 20px 50px rgba(0,0,0,.35); --tap:44px;
+    --bg:#0b1120; --bg-grad:#1e293b; --border:#334155; --text:#e5e7eb; --muted:#94a3b8;
+    --accent:#22c55e; --accent-soft:rgba(34,197,94,.12); --danger:#f87171;
+    --radius:14px; --radius-sm:10px; --tap:44px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   body{
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
     background:radial-gradient(1200px 600px at 50% -10%, var(--bg-grad), var(--bg));
-    color:var(--text); min-height:100vh; padding:16px; margin:0;
-    -webkit-font-smoothing:antialiased;
+    color:var(--text); min-height:100vh; padding:16px; margin:0; -webkit-font-smoothing:antialiased;
   }
   .container{max-width:1120px;margin:0 auto}
   .app-header{text-align:center;margin-bottom:20px}
   .app-header h1{
-    margin:0 0 6px; font-size:clamp(20px, 5vw, 32px); letter-spacing:-.03em;
+    margin:0 0 6px; font-size:clamp(20px,5vw,32px); letter-spacing:-.03em;
     background:linear-gradient(90deg,#a7f3d0,#22c55e 60%,#4ade80);
     -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;
   }
-  .app-header p{margin:0;color:var(--muted);font-size:clamp(13px, 2.4vw, 14px)}
+  .app-header p{margin:0;color:var(--muted);font-size:clamp(13px,2.4vw,14px)}
   .grid{display:grid;grid-template-columns:1fr;gap:16px}
   @media (min-width:860px){.grid{grid-template-columns:1fr 1.2fr;gap:20px}}
-  
   .card{
-    background:linear-gradient(180deg, rgba(17,24,39,.95), rgba(15,23,42,.92));
-    border:1px solid var(--border); border-radius:var(--radius);
-    padding:18px; box-shadow:var(--shadow); backdrop-filter:blur(12px);
+    background:linear-gradient(180deg,rgba(17,24,39,.95),rgba(15,23,42,.92));
+    border:1px solid var(--border); border-radius:var(--radius); padding:18px;
+    box-shadow:0 20px 50px rgba(0,0,0,.35);
   }
   .card h2{margin:0 0 14px;font-size:15px;display:flex;align-items:center;gap:8px}
   .card h2::before{content:"";width:4px;height:16px;border-radius:2px;background:var(--accent)}
-
   .field{display:block;margin-bottom:12px}
   .field-label{display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase}
-  .input-wrap{position:relative; display:flex; gap:8px;}
-  
-  input[type=password],input[type=text], select{
+  .hint{font-size:11.5px;color:var(--muted);margin-top:5px;min-height:14px}
+  .input-wrap{position:relative}
+  input[type=password],input[type=text],select{
     width:100%; padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border);
     background:#020617; color:var(--text); font-size:14px; outline:none; min-height:var(--tap);
-    appearance: none; -webkit-appearance: none;
   }
-  select {
-    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-    background-repeat: no-repeat; background-position: right 12px top 50%; background-size: 12px auto;
+  select{
+    appearance:none;-webkit-appearance:none;
+    background-image:url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%2394a3b8' d='M6 8 0 0h12z'/%3E%3C/svg%3E");
+    background-repeat:no-repeat; background-position:right 12px center;
   }
-  input:focus, select:focus{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
-  
+  input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
   .toggle-eye{
-    position:absolute; top:50%; right:6px; transform:translateY(-50%);
-    background:transparent; border:0; padding:8px; cursor:pointer; color:var(--muted); font-size:16px;
+    position:absolute;top:50%;right:6px;transform:translateY(-50%);
+    background:transparent;border:0;padding:8px;cursor:pointer;color:var(--muted);font-size:16px;min-height:0;
   }
-
   .upload-box{
-    display:block; border:2px dashed var(--border); border-radius:var(--radius);
-    padding:20px; text-align:center; cursor:pointer; background:rgba(15,23,42,.55); transition:.2s;
+    display:block;border:2px dashed var(--border);border-radius:var(--radius);padding:20px;
+    text-align:center;cursor:pointer;background:rgba(15,23,42,.55);transition:.2s;
   }
-  .upload-box:hover, .upload-box.dragover{border-color:var(--accent); background:var(--accent-soft);}
+  .upload-box:hover,.upload-box.dragover{border-color:var(--accent);background:var(--accent-soft)}
   .upload-box input{display:none}
   .upload-icon{font-size:32px;margin-bottom:6px;display:block}
   .upload-box strong{display:block;font-size:14.5px}
-  .upload-box span{display:block;color:var(--muted);font-size:12.5px;margin-top:4px}
-
+  .upload-box span.sub{display:block;color:var(--muted);font-size:12.5px;margin-top:4px}
   #preview{margin-top:12px;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--border);display:none}
   #preview img,#preview video{width:100%;max-height:240px;display:block;object-fit:contain;background:#020617}
-  
   .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
-  .actions .full{grid-column:1 / -1}
-  @media (min-width:480px){.actions{grid-template-columns:1.4fr 1fr 1fr}.actions .full{grid-column:auto}}
-  
+  .actions .full{grid-column:1/-1}
+  @media (min-width:480px){.actions{grid-template-columns:1.4fr 1fr}.actions .full{grid-column:auto}}
   button{
-    border:none; border-radius:var(--radius-sm); padding:12px 14px; font-weight:700;
-    cursor:pointer; transition:.15s; min-height:var(--tap); display:flex;
-    align-items:center; justify-content:center; gap:8px; font-size:14px;
+    border:none;border-radius:var(--radius-sm);padding:12px 14px;font-weight:700;cursor:pointer;
+    transition:.15s;min-height:var(--tap);display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;
   }
   button:disabled{opacity:.45;cursor:not-allowed}
-  .btn-primary{background:linear-gradient(180deg,#22c55e,#16a34a); color:#052e16}
-  .btn-primary:not(:disabled):hover{background:linear-gradient(180deg,#16a34a,#15803d); color:#fff}
-  .btn-secondary{background:#1e293b; color:var(--text); border:1px solid var(--border)}
+  .btn-primary{background:linear-gradient(180deg,#22c55e,#16a34a);color:#052e16}
+  .btn-primary:not(:disabled):hover{background:linear-gradient(180deg,#16a34a,#15803d);color:#fff}
+  .btn-secondary{background:#1e293b;color:var(--text);border:1px solid var(--border)}
   .btn-secondary:hover{background:#273449}
-
   #status{margin-top:12px;font-size:13px;min-height:20px;padding:0 2px}
   #status.error{color:var(--danger)} #status.success{color:var(--accent)}
-  
-  .result-group {
-    background: #020617; border: 1px solid var(--border);
-    border-radius: var(--radius-sm); margin-bottom: 12px; overflow: hidden;
+  .result-group{background:#020617;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:12px;overflow:hidden}
+  .result-header{display:flex;justify-content:space-between;align-items:center;background:#0f172a;padding:8px 12px;border-bottom:1px solid var(--border)}
+  .result-header span{font-size:12px;font-weight:700;color:var(--accent)}
+  .result-header small{color:var(--muted);font-weight:500;margin-left:6px}
+  .btn-copy-small{background:transparent;border:1px solid var(--border);color:var(--muted);padding:4px 10px;font-size:11px;border-radius:6px;min-height:28px}
+  .btn-copy-small:hover{background:var(--border);color:#fff}
+  .result-group textarea,.result-group input{
+    width:100%;border:none;background:transparent;color:var(--text);padding:12px;
+    font-size:13.5px;outline:none;resize:vertical;font-family:inherit;border-radius:0;box-shadow:none;
   }
-  .result-header {
-    display: flex; justify-content: space-between; align-items: center;
-    background: #0f172a; padding: 8px 12px; border-bottom: 1px solid var(--border);
-  }
-  .result-header span { font-size: 12px; font-weight: 700; color: var(--accent); }
-  .btn-copy-small {
-    background: transparent; border: 1px solid var(--border); color: var(--muted);
-    padding: 4px 10px; font-size: 11px; border-radius: 6px; min-height: 28px; cursor: pointer;
-  }
-  .btn-copy-small:hover { background: var(--border); color: #fff; }
-  .result-group textarea, .result-group input {
-    width: 100%; border: none; background: transparent; color: var(--text);
-    padding: 12px; font-size: 13.5px; outline: none; resize: vertical; font-family: inherit;
-  }
-  .result-group textarea { min-height: 80px; }
-  
+  .result-group textarea{min-height:80px}
   .toast{
-    position:fixed; bottom:20px; left:50%; transform:translateX(-50%) translateY(20px);
-    background:#0f172a; border:1px solid var(--border); color:var(--text);
-    padding:11px 18px; border-radius:12px; font-size:13.5px; font-weight:600;
-    opacity:0; pointer-events:none; transition:.25s; z-index:999;
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);
+    background:#0f172a;border:1px solid var(--border);color:var(--text);padding:11px 18px;
+    border-radius:12px;font-size:13.5px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:999;
   }
-  .toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .spinner{width:16px;height:16px;border:2px solid #052e16;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;display:inline-block}
+  @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <div class="container">
   <header class="app-header">
     <h1>SEO Microstock Generator</h1>
-    <p>Pilih provider & model, lalu copy-paste hasilnya ke Adobe Stock.</p>
+    <p>Tempel API key, pilih model (atau kosongkan), lalu copy hasilnya ke Adobe Stock.</p>
   </header>
 
   <div class="grid">
-    <!-- PANEL KIRI -->
     <section class="card">
       <h2>1. API & Media</h2>
 
       <div class="field">
         <label class="field-label" for="apiKeyInput">API Key</label>
         <div class="input-wrap">
-          <input id="apiKeyInput" type="password" placeholder="Tempel API Key di sini (AIza..., sk-...)" autocomplete="off" />
-          <button class="toggle-eye" id="toggleEye" type="button">👁</button>
+          <input id="apiKeyInput" type="password" placeholder="AIza..., sk-..., sk-ant-..., gsk_..., xai-..." autocomplete="off" spellcheck="false" />
+          <button class="toggle-eye" id="toggleEye" type="button" aria-label="Tampilkan key">👁</button>
         </div>
       </div>
 
       <div class="field">
         <label class="field-label" for="providerSelect">Provider AI</label>
         <select id="providerSelect">
-          <option value="auto">Deteksi Otomatis (Berdasarkan Key)</option>
+          <option value="auto">Deteksi Otomatis (dari Key)</option>
           <option value="gemini">Google Gemini</option>
           <option value="openai">OpenAI (ChatGPT)</option>
           <option value="anthropic">Anthropic (Claude)</option>
@@ -153,17 +132,16 @@
       </div>
 
       <div class="field">
-        <label class="field-label" for="modelSelect">Model AI</label>
-        <select id="modelSelect">
-          <option value="">-- Ketik API Key Dulu --</option>
-        </select>
-        <input id="customModelInput" type="text" placeholder="Ketik nama model manual (cth: gemini-1.5-pro)" style="display:none; margin-top:8px;" />
+        <label class="field-label" for="modelInput">Model AI</label>
+        <input id="modelInput" type="text" list="modelList" autocomplete="off" spellcheck="false" placeholder="Kosongkan = model default" />
+        <datalist id="modelList"></datalist>
+        <div class="hint" id="modelHint"></div>
       </div>
 
       <label class="upload-box" for="fileInput" id="dropZone">
         <span class="upload-icon">📤</span>
         <strong>Pilih foto / video</strong>
-        <span>Format: JPG, PNG, MP4, WEBM</span>
+        <span class="sub">Format: JPG, PNG, WEBP, MP4, WEBM (bisa drag & drop)</span>
         <input id="fileInput" type="file" accept="image/*,video/*" />
       </label>
 
@@ -177,46 +155,33 @@
       <div id="status" aria-live="polite"></div>
     </section>
 
-    <!-- PANEL KANAN -->
     <section class="card">
       <h2>2. Hasil Metadata</h2>
-      
+
       <div class="result-group">
-        <div class="result-header">
-          <span>Title</span>
-          <button class="btn-copy-small" onclick="copyField('outTitle')">Copy</button>
-        </div>
+        <div class="result-header"><div><span>Title</span><small id="cTitle"></small></div><button class="btn-copy-small" data-copy="outTitle">Copy</button></div>
         <textarea id="outTitle" readonly placeholder="Judul akan muncul di sini..."></textarea>
       </div>
 
       <div class="result-group">
-        <div class="result-header">
-          <span>Description</span>
-          <button class="btn-copy-small" onclick="copyField('outDesc')">Copy</button>
-        </div>
+        <div class="result-header"><div><span>Description</span></div><button class="btn-copy-small" data-copy="outDesc">Copy</button></div>
         <textarea id="outDesc" readonly placeholder="Deskripsi akan muncul di sini..."></textarea>
       </div>
 
       <div class="result-group">
-        <div class="result-header">
-          <span>Keywords (Dipisah Koma)</span>
-          <button class="btn-copy-small" onclick="copyField('outKeywords')">Copy</button>
-        </div>
+        <div class="result-header"><div><span>Keywords</span><small id="cKw"></small></div><button class="btn-copy-small" data-copy="outKeywords">Copy</button></div>
         <textarea id="outKeywords" readonly placeholder="Kata kunci akan muncul di sini..."></textarea>
       </div>
 
       <div class="result-group">
-        <div class="result-header">
-          <span>Kategori Adobe Stock</span>
-          <button class="btn-copy-small" onclick="copyField('outCategory')">Copy</button>
-        </div>
+        <div class="result-header"><div><span>Kategori Adobe Stock</span></div><button class="btn-copy-small" data-copy="outCategory">Copy</button></div>
         <input id="outCategory" type="text" readonly placeholder="Kategori akan muncul di sini..." />
       </div>
     </section>
   </div>
 </div>
 
-<div class="toast" id="toast">Disalin!</div>
+<div class="toast" id="toast"></div>
 
 <script>
 const PROMPT = `You are a senior SEO expert for Adobe Stock, Shutterstock, and Freepik.
@@ -235,291 +200,336 @@ Category:
 [Exactly one Adobe Stock category, e.g. Technology, People, Nature, Business, etc.]`;
 
 const $ = (id) => document.getElementById(id);
-const apiKeyInput = $("apiKeyInput");
-const providerSelect = $("providerSelect");
-const modelSelect = $("modelSelect");
-const customModelInput = $("customModelInput");
-const fileInput = $("fileInput");
-const preview = $("preview");
-const generateBtn = $("generateBtn");
-const clearBtn = $("clearBtn");
-const statusEl = $("status");
-const dropZone = $("dropZone");
-const toastEl = $("toast");
-
+const el = {
+  key: $("apiKeyInput"), provider: $("providerSelect"), model: $("modelInput"),
+  list: $("modelList"), hint: $("modelHint"), file: $("fileInput"), preview: $("preview"),
+  gen: $("generateBtn"), clear: $("clearBtn"), status: $("status"), drop: $("dropZone"), toast: $("toast"),
+};
 let selectedFile = null;
 
-// Daftar Model Default per Provider
-const MODELS = {
-  gemini: ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash-exp", "gemini-1.0-pro-vision-latest"],
-  openai: ["gpt-4o-mini", "gpt-4o", "gpt-4-turbo"],
-  anthropic: ["claude-3-5-sonnet-20240620", "claude-3-haiku-20240307"],
-  groq: ["llama-3.2-11b-vision-preview", "llama-3.2-90b-vision-preview"],
-  openrouter: ["anthropic/claude-3.5-sonnet", "google/gemini-pro-1.5", "openai/gpt-4o"],
-  xai: ["grok-2-vision-1212", "grok-vision-beta"]
+// ---------- Konfigurasi provider ----------
+const PROVIDERS = {
+  gemini:     { name: "Gemini",     default: "gemini-2.5-flash",
+                fallback: ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"] },
+  openai:     { name: "OpenAI",     base: "https://api.openai.com/v1", default: "gpt-4o-mini",
+                fallback: ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini", "gpt-4.1", "gpt-5-mini", "gpt-5"] },
+  anthropic:  { name: "Anthropic",  default: "claude-sonnet-4-5",
+                fallback: ["claude-sonnet-4-5", "claude-haiku-4-5", "claude-opus-4-1", "claude-3-5-haiku-latest"] },
+  groq:       { name: "Groq",       base: "https://api.groq.com/openai/v1", default: "meta-llama/llama-4-scout-17b-16e-instruct",
+                fallback: ["meta-llama/llama-4-scout-17b-16e-instruct", "meta-llama/llama-4-maverick-17b-128e-instruct"] },
+  openrouter: { name: "OpenRouter", base: "https://openrouter.ai/api/v1", default: "google/gemini-2.5-flash",
+                fallback: ["google/gemini-2.5-flash", "anthropic/claude-sonnet-4.5", "openai/gpt-4o-mini", "openai/gpt-4o"] },
+  xai:        { name: "xAI",        base: "https://api.x.ai/v1", default: "grok-2-vision-1212",
+                fallback: ["grok-2-vision-1212", "grok-4"] },
 };
 
-// Bersihkan Key dan Deteksi
-function cleanKey(key) {
-  return (key || "").replace(/['"]+/g, '').trim(); // Hapus kutip dan spasi
+const cleanKey = (k) => (k || "").replace(/['"\s]+/g, "");
+
+function detectProvider(key) {
+  if (key.startsWith("sk-or-"))  return "openrouter";
+  if (key.startsWith("sk-ant-")) return "anthropic";
+  if (key.startsWith("gsk_"))    return "groq";
+  if (key.startsWith("xai-"))    return "xai";
+  if (key.startsWith("AIza") || key.startsWith("AQ.")) return "gemini";
+  if (key.startsWith("sk-"))     return "openai";
+  return "gemini";
+}
+const currentProvider = () => el.provider.value === "auto" ? detectProvider(cleanKey(el.key.value)) : el.provider.value;
+
+// ---------- Daftar model (live dari API, fallback statis) ----------
+let modelReq = 0;
+function renderModels(list, note) {
+  el.list.innerHTML = "";
+  list.forEach((m) => { const o = document.createElement("option"); o.value = m; el.list.appendChild(o); });
+  el.hint.textContent = note;
 }
 
-function autoDetectProvider(key) {
-  const k = cleanKey(key);
-  if (k.startsWith("sk-or-v1-")) return "openrouter";
-  if (k.startsWith("sk-ant-"))   return "anthropic";
-  if (k.startsWith("gsk_"))      return "groq";
-  if (k.startsWith("AIza") || k.startsWith("AQ.Ab")) return "gemini";
-  if (k.startsWith("sk-"))       return "openai";
-  if (k.startsWith("xai-"))      return "xai";
-  return "gemini"; // Fallback ke Gemini kalau tidak dikenali
-}
-
-// Update Dropdown Model
-function updateModelDropdown(providerId) {
-  modelSelect.innerHTML = "";
-  const models = MODELS[providerId] || [];
-  
-  if (models.length === 0) {
-    modelSelect.innerHTML = '<option value="">-- Tidak ada model default --</option>';
-  } else {
-    models.forEach(m => {
-      const opt = document.createElement("option");
-      opt.value = m; opt.textContent = m;
-      modelSelect.appendChild(opt);
+async function fetchModels(pid, key) {
+  const H = { Accept: "application/json" };
+  if (pid === "gemini") {
+    const r = await fetch("https://generativelanguage.googleapis.com/v1beta/models?pageSize=200", { headers: { ...H, "x-goog-api-key": key } });
+    if (!r.ok) throw 0;
+    return (await r.json()).models
+      .filter((m) => m.supportedGenerationMethods?.includes("generateContent") && /gemini/i.test(m.name))
+      .map((m) => m.name.replace("models/", ""));
+  }
+  if (pid === "anthropic") {
+    const r = await fetch("https://api.anthropic.com/v1/models?limit=100", {
+      headers: { ...H, "x-api-key": key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
     });
+    if (!r.ok) throw 0;
+    return (await r.json()).data.map((m) => m.id);
   }
-  
-  // Tambahkan opsi manual
-  const optCustom = document.createElement("option");
-  optCustom.value = "custom"; optCustom.textContent = "✏️ Ketik Manual (Custom)...";
-  modelSelect.appendChild(optCustom);
+  const r = await fetch(`${PROVIDERS[pid].base}/models`, { headers: { ...H, Authorization: `Bearer ${key}` } });
+  if (!r.ok) throw 0;
+  let data = (await r.json()).data || [];
+  if (pid === "openrouter") data = data.filter((m) => m.architecture?.input_modalities?.includes("image"));
+  let ids = data.map((m) => m.id);
+  if (pid === "openai") ids = ids.filter((id) => /^(gpt|o\d|chatgpt)/.test(id) && !/embed|tts|whisper|audio|realtime|image|transcribe|moderation|search/.test(id));
+  return ids;
 }
 
-// Event Listener saat API Key diketik
-apiKeyInput.addEventListener("input", () => {
-  const key = cleanKey(apiKeyInput.value);
-  if (!key) return;
-
-  // Kalau user pilih "auto", kita deteksi
-  if (providerSelect.value === "auto") {
-    const detected = autoDetectProvider(key);
-    updateModelDropdown(detected);
+async function loadModels() {
+  const pid = currentProvider(), key = cleanKey(el.key.value), id = ++modelReq;
+  const P = PROVIDERS[pid];
+  el.model.placeholder = `Kosongkan = default (${P.default})`;
+  renderModels(P.fallback, key ? "Mengambil daftar model dari API..." : "Daftar bawaan. Isi API key untuk daftar lengkap.");
+  if (key.length < 15) return;
+  try {
+    const ids = (await fetchModels(pid, key)).sort();
+    if (id !== modelReq || !ids.length) return;
+    renderModels(ids, `${ids.length} model ditemukan di akun ${P.name}. Klik/ketik untuk memilih.`);
+  } catch {
+    if (id === modelReq) renderModels(P.fallback, "Gagal ambil daftar live (key salah / diblokir). Pakai daftar bawaan.");
   }
-});
+}
 
-// Event Listener saat Provider diubah manual
-providerSelect.addEventListener("change", () => {
-  let p = providerSelect.value;
-  if (p === "auto") {
-    p = autoDetectProvider(apiKeyInput.value);
-  }
-  updateModelDropdown(p);
-});
+const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
+const loadModelsDebounced = debounce(loadModels, 600);
 
-// Event Listener saat Model diubah (munculkan input manual jika pilih 'custom')
-modelSelect.addEventListener("change", () => {
-  if (modelSelect.value === "custom") {
-    customModelInput.style.display = "block";
-    customModelInput.focus();
-  } else {
-    customModelInput.style.display = "none";
-    customModelInput.value = "";
-  }
-});
+el.key.addEventListener("input", loadModelsDebounced);
+el.key.addEventListener("paste", () => setTimeout(loadModels, 50));
+el.provider.addEventListener("change", () => { el.model.value = ""; loadModels(); try { localStorage.setItem("seo_provider", el.provider.value); } catch {} });
+el.model.addEventListener("change", () => { try { localStorage.setItem("seo_model", el.model.value); } catch {} });
+// Tampilkan semua saran saat field diklik (kosongkan sementara)
+el.model.addEventListener("focus", () => { if (el.model.value) { el.model.dataset.prev = el.model.value; el.model.value = ""; } });
+el.model.addEventListener("blur", () => { if (!el.model.value && el.model.dataset.prev) { el.model.value = el.model.dataset.prev; } el.model.dataset.prev = ""; });
+// Kalau user mau benar-benar mengosongkan, tekan Reset / hapus lalu Enter tidak diperlukan: blur mengembalikan nilai lama.
 
-// Inisialisasi awal
-updateModelDropdown("gemini");
-
-// Toggle Eye
 $("toggleEye").addEventListener("click", () => {
-  const isPass = apiKeyInput.type === "password";
-  apiKeyInput.type = isPass ? "text" : "password";
-  $("toggleEye").textContent = isPass ? "🙈" : "👁";
+  const show = el.key.type === "password";
+  el.key.type = show ? "text" : "password";
+  $("toggleEye").textContent = show ? "🙈" : "👁";
 });
 
-// Handle File
-dropZone.addEventListener("dragover", (e) => { e.preventDefault(); dropZone.classList.add("dragover"); });
-dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragover"));
-dropZone.addEventListener("drop", (e) => { e.preventDefault(); dropZone.classList.remove("dragover"); if(e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
-fileInput.addEventListener("change", (e) => { if(e.target.files[0]) handleFile(e.target.files[0]); });
+// ---------- File ----------
+["dragover", "dragenter"].forEach((e) => el.drop.addEventListener(e, (ev) => { ev.preventDefault(); el.drop.classList.add("dragover"); }));
+["dragleave", "drop"].forEach((e) => el.drop.addEventListener(e, () => el.drop.classList.remove("dragover")));
+el.drop.addEventListener("drop", (e) => { e.preventDefault(); if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]); });
+el.file.addEventListener("change", (e) => { if (e.target.files[0]) handleFile(e.target.files[0]); });
 
+let previewURL = null;
 function handleFile(file) {
+  if (!/^(image|video)\//.test(file.type)) return setStatus("Format file tidak didukung.", "error");
   selectedFile = file;
-  preview.innerHTML = ""; preview.style.display = "block";
-  if (file.type.startsWith("image/")) {
-    const img = document.createElement("img"); img.src = URL.createObjectURL(file); preview.appendChild(img);
-  } else if (file.type.startsWith("video/")) {
-    const v = document.createElement("video"); v.src = URL.createObjectURL(file); v.controls = true; v.muted = true; preview.appendChild(v);
-  }
-  generateBtn.disabled = false;
-  setStatus("");
+  if (previewURL) URL.revokeObjectURL(previewURL);
+  previewURL = URL.createObjectURL(file);
+  el.preview.innerHTML = ""; el.preview.style.display = "block";
+  const node = document.createElement(file.type.startsWith("image/") ? "img" : "video");
+  node.src = previewURL;
+  if (node.tagName === "VIDEO") { node.controls = true; node.muted = true; }
+  el.preview.appendChild(node);
+  el.gen.disabled = false; setStatus("");
 }
 
-clearBtn.addEventListener("click", () => {
-  selectedFile = null; fileInput.value = ""; preview.innerHTML = ""; preview.style.display = "none";
-  generateBtn.disabled = true; setStatus("");
-  ["outTitle","outDesc","outKeywords","outCategory"].forEach(id => $(id).value = "");
+el.clear.addEventListener("click", () => {
+  selectedFile = null; el.file.value = ""; el.preview.innerHTML = ""; el.preview.style.display = "none";
+  el.gen.disabled = true; setStatus("");
+  ["outTitle", "outDesc", "outKeywords", "outCategory"].forEach((id) => ($(id).value = ""));
+  $("cTitle").textContent = ""; $("cKw").textContent = "";
 });
 
-window.copyField = function(id) {
-  const el = $(id);
-  if(!el.value) return;
-  navigator.clipboard.writeText(el.value).then(() => showToast("Berhasil disalin!"));
-};
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-copy]"); if (!b) return;
+  const v = $(b.dataset.copy).value; if (!v) return;
+  navigator.clipboard.writeText(v).then(() => showToast("Berhasil disalin!"));
+});
 
-function showToast(msg) {
-  toastEl.textContent = msg; toastEl.classList.add("show");
-  setTimeout(() => toastEl.classList.remove("show"), 2000);
-}
-function setStatus(msg, type="") { statusEl.textContent = msg; statusEl.className = type; }
+function showToast(msg) { el.toast.textContent = msg; el.toast.classList.add("show"); setTimeout(() => el.toast.classList.remove("show"), 1800); }
+function setStatus(msg, type = "") { el.status.textContent = msg; el.status.className = type; }
 
-// GENERATE
-generateBtn.addEventListener("click", async () => {
-  const apiKey = cleanKey(apiKeyInput.value);
-  let providerId = providerSelect.value;
-  
-  if (providerId === "auto") providerId = autoDetectProvider(apiKey);
-  
-  let finalModel = modelSelect.value;
-  if (finalModel === "custom") finalModel = customModelInput.value.trim();
-  if (!finalModel) finalModel = MODELS[providerId]?.[0] || "gemini-1.5-flash";
-
+// ---------- Generate ----------
+el.gen.addEventListener("click", async () => {
+  const key = cleanKey(el.key.value);
   if (!selectedFile) return setStatus("Pilih file dulu.", "error");
-  if (!apiKey) return setStatus("API key kosong.", "error");
+  if (!key) return setStatus("API key kosong.", "error");
 
-  generateBtn.disabled = true;
-  generateBtn.innerHTML = '<span style="width:16px;height:16px;border:2px solid #052e16;border-top-color:transparent;border-radius:50%;animation:spin .6s linear infinite;display:inline-block"></span> Memproses...';
-  setStatus(`Menganalisis via ${providerId.toUpperCase()} (${finalModel})...`);
+  const pid = currentProvider();
+  const model = el.model.value.trim() || PROVIDERS[pid].default;
+
+  el.gen.disabled = true;
+  el.gen.innerHTML = '<span class="spinner"></span> Memproses...';
+  setStatus(`Menganalisis via ${PROVIDERS[pid].name} (${model})...`);
 
   try {
-    const text = await analyzeMedia(providerId, finalModel, apiKey, selectedFile);
+    const text = await analyzeMedia(pid, model, key, selectedFile);
     parseAndPopulate(text);
-    setStatus("Selesai! Metadata berhasil dibuat.", "success");
+    setStatus(`Selesai! (${model})`, "success");
   } catch (err) {
     console.error(err);
-    setStatus("Gagal: " + err.message, "error");
+    setStatus("Gagal: " + (err.message || err), "error");
   } finally {
-    generateBtn.disabled = false;
-    generateBtn.textContent = "Generate Metadata";
+    el.gen.disabled = false; el.gen.textContent = "Generate Metadata";
   }
 });
 
 function parseAndPopulate(text) {
-  const titleMatch = text.match(/Title:\s*([\s\S]*?)(?=\nDescription:|$)/i);
-  const descMatch  = text.match(/Description:\s*([\s\S]*?)(?=\nKeywords:|$)/i);
-  const kwMatch    = text.match(/Keywords:\s*([\s\S]*?)(?=\nCategory:|$)/i);
-  const catMatch   = text.match(/Category:\s*([\s\S]*?)$/i);
+  const grab = (name, next) => {
+    const m = text.match(new RegExp(`${name}:\\s*([\\s\\S]*?)(?=\\n\\s*(?:${next}):|$)`, "i"));
+    return m ? m[1].trim() : "";
+  };
+  const title = grab("Title", "Description|Keywords|Category");
+  const desc = grab("Description", "Keywords|Category");
+  const cat = grab("Category", "Title|Description|Keywords").replace(/[\[\]*]/g, "").split("\n")[0].trim();
 
-  $("outTitle").value = titleMatch ? titleMatch[1].trim() : "";
-  $("outDesc").value = descMatch ? descMatch[1].trim() : "";
-  
-  if (kwMatch) {
-    let kw = kwMatch[1].replace(/\n/g, ', ').replace(/,\s*,/g, ',').trim();
-    $("outKeywords").value = kw;
-  } else { $("outKeywords").value = ""; }
+  const seen = new Set();
+  const kws = grab("Keywords", "Category").replace(/\n/g, ",").split(",")
+    .map((k) => k.replace(/^[\s\d.\-•*]+/, "").trim().toLowerCase())
+    .filter((k) => k && !seen.has(k) && seen.add(k)).slice(0, 49);
 
-  $("outCategory").value = catMatch ? catMatch[1].trim().replace(/[\[\]]/g, '') : "";
+  $("outTitle").value = title; $("cTitle").textContent = title ? `${title.length} char` : "";
+  $("outDesc").value = desc;
+  $("outKeywords").value = kws.join(", "); $("cKw").textContent = kws.length ? `${kws.length}/49` : "";
+  $("outCategory").value = cat;
+  if (!title && !kws.length) throw new Error("Format respons AI tidak sesuai. Coba lagi atau ganti model.");
 }
 
-// API CALLS
-async function analyzeMedia(providerId, model, apiKey, file) {
-  if (providerId === "gemini") return callGemini(model, apiKey, file);
-  if (["openai","groq","openrouter","xai"].includes(providerId)) return callOpenAICompatible(providerId, model, apiKey, file);
-  if (providerId === "anthropic") return callAnthropic(model, apiKey, file);
-  throw new Error("Provider tidak didukung");
+// ---------- API calls ----------
+async function readError(res, fallback) {
+  try { const j = await res.json(); return j.error?.message || j.message || fallback; } catch { return `${fallback} (HTTP ${res.status})`; }
 }
 
-async function callGemini(model, apiKey, file) {
-  let parts;
+function analyzeMedia(pid, model, key, file) {
+  if (pid === "gemini") return callGemini(model, key, file);
+  if (pid === "anthropic") return callAnthropic(model, key, file);
+  return callOpenAICompatible(pid, model, key, file);
+}
+
+async function callGemini(model, key, file) {
+  let part;
   if (file.type.startsWith("video/")) {
     setStatus("Upload video ke Google...");
-    const up = await uploadGeminiVideo(apiKey, file);
-    parts = [{ file_data: { file_uri: up.uri, mime_type: up.mimeType } }, { text: PROMPT }];
+    const up = await uploadGeminiVideo(key, file);
+    part = { file_data: { file_uri: up.uri, mime_type: up.mimeType } };
+    setStatus("Menganalisis video...");
   } else {
-    const b64 = await fileToBase64(file);
-    parts = [{ inline_data: { mime_type: file.type, data: b64 } }, { text: PROMPT }];
+    const { b64, mime } = await imageToBase64(file);
+    part = { inline_data: { mime_type: mime, data: b64 } };
   }
-  
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-    method: "POST", headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.6, maxOutputTokens: 1024 } })
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+    body: JSON.stringify({ contents: [{ parts: [part, { text: PROMPT }] }], generationConfig: { temperature: 0.6, maxOutputTokens: 2048 } }),
   });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error?.message || "Gagal memanggil Gemini. Pastikan API Key benar.");
-  }
-  return (await res.json()).candidates[0].content.parts.map(p => p.text).join("");
+  if (!res.ok) throw new Error(await readError(res, "Gagal memanggil Gemini"));
+  const j = await res.json();
+  const text = j.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("");
+  if (!text) throw new Error(j.promptFeedback?.blockReason ? `Diblokir: ${j.promptFeedback.blockReason}` : "Respons kosong dari Gemini.");
+  return text;
 }
 
-async function callOpenAICompatible(providerId, model, apiKey, file) {
-  const baseURL = { openai: "https://api.openai.com/v1", groq: "https://api.groq.com/openai/v1", openrouter: "https://openrouter.ai/api/v1", xai: "https://api.x.ai/v1" }[providerId];
-  let imageDataUrl = file.type.startsWith("video/") ? await extractFirstFrame(file) : await dataURL(file);
-  
-  const res = await fetch(`${baseURL}/chat/completions`, {
-    method: "POST", headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: model, max_tokens: 1024, temperature: 0.6,
-      messages: [{ role: "user", content: [{ type: "image_url", image_url: { url: imageDataUrl } }, { type: "text", text: PROMPT }] }]
-    })
+async function callOpenAICompatible(pid, model, key, file) {
+  const url = await imageForChat(file);
+  const body = {
+    model,
+    messages: [{ role: "user", content: [{ type: "image_url", image_url: { url } }, { type: "text", text: PROMPT }] }],
+  };
+  const reasoning = /^(o\d|gpt-5)/.test(model);
+  if (pid === "openai") body[reasoning ? "max_completion_tokens" : "max_tokens"] = reasoning ? 4096 : 1024;
+  else body.max_tokens = 1024;
+  if (!reasoning) body.temperature = 0.6;
+
+  const res = await fetch(`${PROVIDERS[pid].base}/chat/completions`, {
+    method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify(body),
   });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error?.message || "Gagal memanggil API");
-  }
-  return (await res.json()).choices[0].message.content;
+  if (!res.ok) throw new Error(await readError(res, `Gagal memanggil ${PROVIDERS[pid].name}`));
+  const text = (await res.json()).choices?.[0]?.message?.content;
+  if (!text) throw new Error("Respons kosong dari model.");
+  return text;
 }
 
-async function callAnthropic(model, apiKey, file) {
-  let imageDataUrl = file.type.startsWith("video/") ? await extractFirstFrame(file) : await dataURL(file);
-  const b64 = imageDataUrl.split(",")[1], mime = imageDataUrl.split(";")[0].split(":")[1];
-  
+async function callAnthropic(model, key, file) {
+  const url = await imageForChat(file);
   const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST", headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01",
+      "anthropic-dangerous-direct-browser-access": "true",
+    },
     body: JSON.stringify({
-      model: model, max_tokens: 1024,
-      messages: [{ role: "user", content: [{ type: "image", source: { type: "base64", media_type: mime, data: b64 } }, { type: "text", text: PROMPT }] }]
-    })
+      model, max_tokens: 1024,
+      messages: [{ role: "user", content: [
+        { type: "image", source: { type: "base64", media_type: "image/jpeg", data: url.split(",")[1] } },
+        { type: "text", text: PROMPT },
+      ] }],
+    }),
   });
-  if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error?.message || "Gagal memanggil Anthropic");
-  }
-  return (await res.json()).content[0].text;
+  if (!res.ok) throw new Error(await readError(res, "Gagal memanggil Anthropic"));
+  const text = (await res.json()).content?.find((c) => c.type === "text")?.text;
+  if (!text) throw new Error("Respons kosong dari Claude.");
+  return text;
 }
 
-// Helpers
-function fileToBase64(f) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result.split(",")[1]); r.onerror = rej; r.readAsDataURL(f); }); }
-function dataURL(f) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(f); }); }
+// ---------- Helpers ----------
+// Gambar → JPEG ter-resize (maks 1568px) supaya payload kecil & cepat
+async function resizeToDataURL(source, w, h, max = 1568) {
+  const s = Math.min(1, max / Math.max(w, h));
+  const c = document.createElement("canvas");
+  c.width = Math.round(w * s); c.height = Math.round(h * s);
+  const ctx = c.getContext("2d");
+  ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.drawImage(source, 0, 0, c.width, c.height);
+  return c.toDataURL("image/jpeg", 0.85);
+}
 
-function extractFirstFrame(file) {
+async function imageForChat(file) {
+  if (file.type.startsWith("video/")) return extractFrame(file);
+  const bmp = await createImageBitmap(file);
+  const url = await resizeToDataURL(bmp, bmp.width, bmp.height);
+  bmp.close?.();
+  return url;
+}
+async function imageToBase64(file) {
+  const url = await imageForChat(file);
+  return { b64: url.split(",")[1], mime: "image/jpeg" };
+}
+
+function extractFrame(file) {
   return new Promise((resolve, reject) => {
-    const v = document.createElement("video"); v.src = URL.createObjectURL(file); v.muted = true; v.playsInline = true;
-    v.addEventListener("loadeddata", () => { v.currentTime = 0.1; });
-    v.addEventListener("seeked", () => {
-      const c = document.createElement("canvas"); c.width = v.videoWidth; c.height = v.videoHeight;
-      c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
-      URL.revokeObjectURL(v.src); resolve(c.toDataURL("image/jpeg", 0.9));
-    });
-    v.addEventListener("error", () => reject(new Error("Gagal baca video")));
+    const v = document.createElement("video"), u = URL.createObjectURL(file);
+    v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = u;
+    const done = (fn, val) => { URL.revokeObjectURL(u); fn(val); };
+    v.addEventListener("loadedmetadata", () => { v.currentTime = Math.min(1, (v.duration || 1) / 2); });
+    v.addEventListener("seeked", async () => done(resolve, await resizeToDataURL(v, v.videoWidth, v.videoHeight)), { once: true });
+    v.addEventListener("error", () => done(reject, new Error("Gagal membaca video")));
   });
 }
 
-async function uploadGeminiVideo(apiKey, file) {
-  const start = await fetch(`https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`, {
-    method: "POST", headers: { "X-Goog-Upload-Protocol": "resumable", "X-Goog-Upload-Command": "start", "X-Goog-Upload-Header-Content-Length": file.size, "X-Goog-Upload-Header-Content-Type": file.type, "Content-Type": "application/json" },
-    body: JSON.stringify({ file: { display_name: file.name } })
+async function uploadGeminiVideo(key, file) {
+  const start = await fetch("https://generativelanguage.googleapis.com/upload/v1beta/files", {
+    method: "POST",
+    headers: {
+      "x-goog-api-key": key, "X-Goog-Upload-Protocol": "resumable", "X-Goog-Upload-Command": "start",
+      "X-Goog-Upload-Header-Content-Length": file.size, "X-Goog-Upload-Header-Content-Type": file.type,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ file: { display_name: file.name } }),
   });
-  const url = start.headers.get("X-Goog-Upload-URL");
-  const up = await fetch(url, { method: "POST", headers: { "X-Goog-Upload-Command": "upload, finalize", "X-Goog-Upload-Offset": "0", "Content-Length": file.size }, body: file });
+  if (!start.ok) throw new Error(await readError(start, "Gagal memulai upload video"));
+  const uploadUrl = start.headers.get("X-Goog-Upload-URL");
+  if (!uploadUrl) throw new Error("URL upload tidak diterima dari Google.");
+
+  const up = await fetch(uploadUrl, {
+    method: "POST", headers: { "X-Goog-Upload-Command": "upload, finalize", "X-Goog-Upload-Offset": "0" }, body: file,
+  });
+  if (!up.ok) throw new Error(await readError(up, "Gagal upload video"));
   let f = (await up.json()).file;
-  while (f.state === "PROCESSING") { await new Promise(r => setTimeout(r, 2000)); f = await (await fetch(`https://generativelanguage.googleapis.com/v1beta/${f.name}?key=${apiKey}`)).json(); }
+
+  for (let i = 0; f.state === "PROCESSING" && i < 60; i++) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/${f.name}`, { headers: { "x-goog-api-key": key } });
+    f = await r.json();
+  }
+  if (f.state !== "ACTIVE") throw new Error("Video gagal diproses oleh Google.");
   return { uri: f.uri, mimeType: f.mimeType };
 }
 
-const style = document.createElement('style');
-style.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
-document.head.appendChild(style);
+// ---------- Init ----------
+try {
+  const sp = localStorage.getItem("seo_provider"); if (sp) el.provider.value = sp;
+  const sm = localStorage.getItem("seo_model"); if (sm) el.model.value = sm;
+} catch {}
+loadModels();
 </script>
 </body>
 </html>
