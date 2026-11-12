@@ -43,13 +43,14 @@
     width:100%; padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border);
     background:#020617; color:var(--text); font-size:14px; outline:none; min-height:var(--tap);
   }
+  .input-wrap input{padding-right:44px}
   select{
     appearance:none;-webkit-appearance:none;
     background-image:url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath fill='%2394a3b8' d='M6 8 0 0h12z'/%3E%3C/svg%3E");
     background-repeat:no-repeat; background-position:right 12px center;
   }
   input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
-  .toggle-eye{
+  .icon-btn{
     position:absolute;top:50%;right:6px;transform:translateY(-50%);
     background:transparent;border:0;padding:8px;cursor:pointer;color:var(--muted);font-size:16px;min-height:0;
   }
@@ -76,7 +77,7 @@
   .btn-primary:not(:disabled):hover{background:linear-gradient(180deg,#16a34a,#15803d);color:#fff}
   .btn-secondary{background:#1e293b;color:var(--text);border:1px solid var(--border)}
   .btn-secondary:hover{background:#273449}
-  #status{margin-top:12px;font-size:13px;min-height:20px;padding:0 2px}
+  #status{margin-top:12px;font-size:13px;min-height:20px;padding:0 2px;word-break:break-word}
   #status.error{color:var(--danger)} #status.success{color:var(--accent)}
   .result-group{background:#020617;border:1px solid var(--border);border-radius:var(--radius-sm);margin-bottom:12px;overflow:hidden}
   .result-header{display:flex;justify-content:space-between;align-items:center;background:#0f172a;padding:8px 12px;border-bottom:1px solid var(--border)}
@@ -114,7 +115,7 @@
         <label class="field-label" for="apiKeyInput">API Key</label>
         <div class="input-wrap">
           <input id="apiKeyInput" type="password" placeholder="AIza..., sk-..., sk-ant-..., gsk_..., xai-..." autocomplete="off" spellcheck="false" />
-          <button class="toggle-eye" id="toggleEye" type="button" aria-label="Tampilkan key">👁</button>
+          <button class="icon-btn" id="toggleEye" type="button" aria-label="Tampilkan key">👁</button>
         </div>
       </div>
 
@@ -133,15 +134,23 @@
 
       <div class="field">
         <label class="field-label" for="modelInput">Model AI</label>
-        <input id="modelInput" type="text" list="modelList" autocomplete="off" spellcheck="false" placeholder="Kosongkan = model default" />
+        <div class="input-wrap">
+          <input id="modelInput" type="text" list="modelList" autocomplete="off" spellcheck="false" placeholder="Kosongkan = model default" />
+          <button class="icon-btn" id="clearModel" type="button" aria-label="Kosongkan model">✕</button>
+        </div>
         <datalist id="modelList"></datalist>
         <div class="hint" id="modelHint"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="ctxInput">Konteks tambahan (opsional)</label>
+        <input id="ctxInput" type="text" placeholder="cth: AI generated, vector, no people, Indonesia" autocomplete="off" />
       </div>
 
       <label class="upload-box" for="fileInput" id="dropZone">
         <span class="upload-icon">📤</span>
         <strong>Pilih foto / video</strong>
-        <span class="sub">Format: JPG, PNG, WEBP, MP4, WEBM (bisa drag & drop)</span>
+        <span class="sub">JPG, PNG, WEBP, MP4, WEBM (bisa drag & drop)</span>
         <input id="fileInput" type="file" accept="image/*,video/*" />
       </label>
 
@@ -177,6 +186,8 @@
         <div class="result-header"><div><span>Kategori Adobe Stock</span></div><button class="btn-copy-small" data-copy="outCategory">Copy</button></div>
         <input id="outCategory" type="text" readonly placeholder="Kategori akan muncul di sini..." />
       </div>
+
+      <button id="copyAllBtn" class="btn-secondary" style="width:100%">Copy Semua</button>
     </section>
   </div>
 </div>
@@ -184,7 +195,7 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const PROMPT = `You are a senior SEO expert for Adobe Stock, Shutterstock, and Freepik.
+const BASE_PROMPT = `You are a senior SEO expert for Adobe Stock, Shutterstock, and Freepik.
 Analyze the attached media and respond EXACTLY in this format with NO extra text, NO markdown, NO bullet points:
 
 Title:
@@ -201,13 +212,14 @@ Category:
 
 const $ = (id) => document.getElementById(id);
 const el = {
-  key: $("apiKeyInput"), provider: $("providerSelect"), model: $("modelInput"),
+  key: $("apiKeyInput"), provider: $("providerSelect"), model: $("modelInput"), ctx: $("ctxInput"),
   list: $("modelList"), hint: $("modelHint"), file: $("fileInput"), preview: $("preview"),
   gen: $("generateBtn"), clear: $("clearBtn"), status: $("status"), drop: $("dropZone"), toast: $("toast"),
 };
 let selectedFile = null;
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// ---------- Konfigurasi provider ----------
+// ---------- Provider ----------
 const PROVIDERS = {
   gemini:     { name: "Gemini",     default: "gemini-2.5-flash",
                 fallback: ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"] },
@@ -236,7 +248,40 @@ function detectProvider(key) {
 }
 const currentProvider = () => el.provider.value === "auto" ? detectProvider(cleanKey(el.key.value)) : el.provider.value;
 
-// ---------- Daftar model (live dari API, fallback statis) ----------
+// ---------- Fetch dengan retry + error yang jelas ----------
+async function apiFetch(url, opts, tries = 3) {
+  let lastErr;
+  for (let i = 0; i < tries; i++) {
+    try {
+      const r = await fetch(url, opts);
+      if ([429, 500, 502, 503, 504].includes(r.status) && i < tries - 1) {
+        setStatus(`Server sibuk (${r.status}), mencoba lagi (${i + 2}/${tries})...`);
+        await sleep(1500 * (i + 1));
+        continue;
+      }
+      return r;
+    } catch (e) {
+      lastErr = e;
+      if (i < tries - 1) { setStatus(`Koneksi gagal, mencoba lagi (${i + 2}/${tries})...`); await sleep(1500 * (i + 1)); }
+    }
+  }
+  throw new Error("Koneksi gagal (jaringan terputus, VPN/ad-blocker, atau diblokir). Coba lagi.");
+}
+
+async function readError(res, label) {
+  let msg = "";
+  try { const j = await res.json(); msg = j.error?.message || j.message || (typeof j.error === "string" ? j.error : ""); } catch {}
+  const hint = {
+    400: "Request tidak valid / model tidak mendukung gambar.",
+    401: "API key salah atau tidak aktif.",
+    403: "API key ditolak (cek pembatasan key / region).",
+    404: "Model tidak ditemukan. Pilih dari daftar atau kosongkan.",
+    429: "Kuota / rate limit habis. Tunggu sebentar atau ganti model.",
+  }[res.status] || "";
+  return `${label} (${res.status}): ${msg || hint || "Error tidak diketahui"}`;
+}
+
+// ---------- Daftar model live ----------
 let modelReq = 0;
 function renderModels(list, note) {
   el.list.innerHTML = "";
@@ -278,23 +323,20 @@ async function loadModels() {
   try {
     const ids = (await fetchModels(pid, key)).sort();
     if (id !== modelReq || !ids.length) return;
-    renderModels(ids, `${ids.length} model ditemukan di akun ${P.name}. Klik/ketik untuk memilih.`);
+    renderModels(ids, `${ids.length} model ditemukan di akun ${P.name}. Ketuk ✕ lalu pilih.`);
   } catch {
-    if (id === modelReq) renderModels(P.fallback, "Gagal ambil daftar live (key salah / diblokir). Pakai daftar bawaan.");
+    if (id === modelReq) renderModels(P.fallback, "Gagal ambil daftar live. Pakai daftar bawaan.");
   }
 }
 
 const debounce = (fn, ms) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; };
-const loadModelsDebounced = debounce(loadModels, 600);
-
-el.key.addEventListener("input", loadModelsDebounced);
+el.key.addEventListener("input", debounce(loadModels, 600));
 el.key.addEventListener("paste", () => setTimeout(loadModels, 50));
-el.provider.addEventListener("change", () => { el.model.value = ""; loadModels(); try { localStorage.setItem("seo_provider", el.provider.value); } catch {} });
-el.model.addEventListener("change", () => { try { localStorage.setItem("seo_model", el.model.value); } catch {} });
-// Tampilkan semua saran saat field diklik (kosongkan sementara)
-el.model.addEventListener("focus", () => { if (el.model.value) { el.model.dataset.prev = el.model.value; el.model.value = ""; } });
-el.model.addEventListener("blur", () => { if (!el.model.value && el.model.dataset.prev) { el.model.value = el.model.dataset.prev; } el.model.dataset.prev = ""; });
-// Kalau user mau benar-benar mengosongkan, tekan Reset / hapus lalu Enter tidak diperlukan: blur mengembalikan nilai lama.
+el.provider.addEventListener("change", () => { el.model.value = ""; loadModels(); save("seo_provider", el.provider.value); save("seo_model", ""); });
+el.model.addEventListener("change", () => save("seo_model", el.model.value.trim()));
+$("clearModel").addEventListener("click", () => { el.model.value = ""; save("seo_model", ""); el.model.focus(); });
+
+function save(k, v) { try { localStorage.setItem(k, v); } catch {} }
 
 $("toggleEye").addEventListener("click", () => {
   const show = el.key.type === "password";
@@ -317,7 +359,7 @@ function handleFile(file) {
   el.preview.innerHTML = ""; el.preview.style.display = "block";
   const node = document.createElement(file.type.startsWith("image/") ? "img" : "video");
   node.src = previewURL;
-  if (node.tagName === "VIDEO") { node.controls = true; node.muted = true; }
+  if (node.tagName === "VIDEO") { node.controls = true; node.muted = true; node.playsInline = true; }
   el.preview.appendChild(node);
   el.gen.disabled = false; setStatus("");
 }
@@ -329,10 +371,17 @@ el.clear.addEventListener("click", () => {
   $("cTitle").textContent = ""; $("cKw").textContent = "";
 });
 
+async function copyText(v) {
+  try { await navigator.clipboard.writeText(v); showToast("Berhasil disalin!"); }
+  catch { showToast("Gagal menyalin"); }
+}
 document.addEventListener("click", (e) => {
   const b = e.target.closest("[data-copy]"); if (!b) return;
-  const v = $(b.dataset.copy).value; if (!v) return;
-  navigator.clipboard.writeText(v).then(() => showToast("Berhasil disalin!"));
+  const v = $(b.dataset.copy).value; if (v) copyText(v);
+});
+$("copyAllBtn").addEventListener("click", () => {
+  const t = $("outTitle").value; if (!t) return;
+  copyText(`${t}\n\n${$("outDesc").value}\n\n${$("outKeywords").value}`);
 });
 
 function showToast(msg) { el.toast.textContent = msg; el.toast.classList.add("show"); setTimeout(() => el.toast.classList.remove("show"), 1800); }
@@ -349,10 +398,19 @@ el.gen.addEventListener("click", async () => {
 
   el.gen.disabled = true;
   el.gen.innerHTML = '<span class="spinner"></span> Memproses...';
-  setStatus(`Menganalisis via ${PROVIDERS[pid].name} (${model})...`);
 
   try {
-    const text = await analyzeMedia(pid, model, key, selectedFile);
+    const isVideo = selectedFile.type.startsWith("video/");
+    setStatus(isVideo ? "Mengambil frame dari video..." : "Menyiapkan gambar...");
+    const images = await getImages(selectedFile);
+    setStatus(`Menganalisis via ${PROVIDERS[pid].name} (${model})...`);
+
+    let prompt = BASE_PROMPT;
+    if (isVideo) prompt += `\n\nNote: the ${images.length} images are frames sampled in order from ONE video clip. Write metadata for the video as a whole (mention footage/motion where relevant).`;
+    const ctx = el.ctx.value.trim();
+    if (ctx) prompt += `\n\nExtra context from the creator (use if relevant): ${ctx}`;
+
+    const text = await analyzeMedia(pid, model, key, images, prompt);
     parseAndPopulate(text);
     setStatus(`Selesai! (${model})`, "success");
   } catch (err) {
@@ -368,13 +426,13 @@ function parseAndPopulate(text) {
     const m = text.match(new RegExp(`${name}:\\s*([\\s\\S]*?)(?=\\n\\s*(?:${next}):|$)`, "i"));
     return m ? m[1].trim() : "";
   };
-  const title = grab("Title", "Description|Keywords|Category");
-  const desc = grab("Description", "Keywords|Category");
+  const title = grab("Title", "Description|Keywords|Category").replace(/[\[\]*]/g, "");
+  const desc = grab("Description", "Keywords|Category").replace(/[\[\]*]/g, "");
   const cat = grab("Category", "Title|Description|Keywords").replace(/[\[\]*]/g, "").split("\n")[0].trim();
 
   const seen = new Set();
-  const kws = grab("Keywords", "Category").replace(/\n/g, ",").split(",")
-    .map((k) => k.replace(/^[\s\d.\-•*]+/, "").trim().toLowerCase())
+  const kws = grab("Keywords", "Category").replace(/[\[\]*]/g, "").replace(/\n/g, ",").split(",")
+    .map((k) => k.replace(/^[\s\d.\-•]+/, "").trim().toLowerCase())
     .filter((k) => k && !seen.has(k) && seen.add(k)).slice(0, 49);
 
   $("outTitle").value = title; $("cTitle").textContent = title ? `${title.length} char` : "";
@@ -384,144 +442,110 @@ function parseAndPopulate(text) {
   if (!title && !kws.length) throw new Error("Format respons AI tidak sesuai. Coba lagi atau ganti model.");
 }
 
-// ---------- API calls ----------
-async function readError(res, fallback) {
-  try { const j = await res.json(); return j.error?.message || j.message || fallback; } catch { return `${fallback} (HTTP ${res.status})`; }
+// ---------- API calls (semua menerima array gambar JPEG data-URL) ----------
+const b64Of = (u) => u.split(",")[1];
+
+function analyzeMedia(pid, model, key, images, prompt) {
+  if (pid === "gemini") return callGemini(model, key, images, prompt);
+  if (pid === "anthropic") return callAnthropic(model, key, images, prompt);
+  return callOpenAICompatible(pid, model, key, images, prompt);
 }
 
-function analyzeMedia(pid, model, key, file) {
-  if (pid === "gemini") return callGemini(model, key, file);
-  if (pid === "anthropic") return callAnthropic(model, key, file);
-  return callOpenAICompatible(pid, model, key, file);
-}
-
-async function callGemini(model, key, file) {
-  let part;
-  if (file.type.startsWith("video/")) {
-    setStatus("Upload video ke Google...");
-    const up = await uploadGeminiVideo(key, file);
-    part = { file_data: { file_uri: up.uri, mime_type: up.mimeType } };
-    setStatus("Menganalisis video...");
-  } else {
-    const { b64, mime } = await imageToBase64(file);
-    part = { inline_data: { mime_type: mime, data: b64 } };
-  }
-  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
+async function callGemini(model, key, images, prompt) {
+  const parts = images.map((u) => ({ inline_data: { mime_type: "image/jpeg", data: b64Of(u) } }));
+  parts.push({ text: prompt });
+  const res = await apiFetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": key },
-    body: JSON.stringify({ contents: [{ parts: [part, { text: PROMPT }] }], generationConfig: { temperature: 0.6, maxOutputTokens: 2048 } }),
+    body: JSON.stringify({ contents: [{ parts }], generationConfig: { temperature: 0.6, maxOutputTokens: 4096 } }),
   });
-  if (!res.ok) throw new Error(await readError(res, "Gagal memanggil Gemini"));
+  if (!res.ok) throw new Error(await readError(res, "Gemini"));
   const j = await res.json();
   const text = j.candidates?.[0]?.content?.parts?.map((p) => p.text || "").join("");
   if (!text) throw new Error(j.promptFeedback?.blockReason ? `Diblokir: ${j.promptFeedback.blockReason}` : "Respons kosong dari Gemini.");
   return text;
 }
 
-async function callOpenAICompatible(pid, model, key, file) {
-  const url = await imageForChat(file);
-  const body = {
-    model,
-    messages: [{ role: "user", content: [{ type: "image_url", image_url: { url } }, { type: "text", text: PROMPT }] }],
-  };
+async function callOpenAICompatible(pid, model, key, images, prompt) {
+  const content = images.map((url) => ({ type: "image_url", image_url: { url } }));
+  content.push({ type: "text", text: prompt });
+  const body = { model, messages: [{ role: "user", content }] };
   const reasoning = /^(o\d|gpt-5)/.test(model);
   if (pid === "openai") body[reasoning ? "max_completion_tokens" : "max_tokens"] = reasoning ? 4096 : 1024;
   else body.max_tokens = 1024;
   if (!reasoning) body.temperature = 0.6;
 
-  const res = await fetch(`${PROVIDERS[pid].base}/chat/completions`, {
+  const res = await apiFetch(`${PROVIDERS[pid].base}/chat/completions`, {
     method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${key}` }, body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(await readError(res, `Gagal memanggil ${PROVIDERS[pid].name}`));
+  if (!res.ok) throw new Error(await readError(res, PROVIDERS[pid].name));
   const text = (await res.json()).choices?.[0]?.message?.content;
   if (!text) throw new Error("Respons kosong dari model.");
   return text;
 }
 
-async function callAnthropic(model, key, file) {
-  const url = await imageForChat(file);
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
+async function callAnthropic(model, key, images, prompt) {
+  const content = images.map((u) => ({ type: "image", source: { type: "base64", media_type: "image/jpeg", data: b64Of(u) } }));
+  content.push({ type: "text", text: prompt });
+  const res = await apiFetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
       "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01",
       "anthropic-dangerous-direct-browser-access": "true",
     },
-    body: JSON.stringify({
-      model, max_tokens: 1024,
-      messages: [{ role: "user", content: [
-        { type: "image", source: { type: "base64", media_type: "image/jpeg", data: url.split(",")[1] } },
-        { type: "text", text: PROMPT },
-      ] }],
-    }),
+    body: JSON.stringify({ model, max_tokens: 1024, messages: [{ role: "user", content }] }),
   });
-  if (!res.ok) throw new Error(await readError(res, "Gagal memanggil Anthropic"));
+  if (!res.ok) throw new Error(await readError(res, "Anthropic"));
   const text = (await res.json()).content?.find((c) => c.type === "text")?.text;
   if (!text) throw new Error("Respons kosong dari Claude.");
   return text;
 }
 
-// ---------- Helpers ----------
-// Gambar → JPEG ter-resize (maks 1568px) supaya payload kecil & cepat
-async function resizeToDataURL(source, w, h, max = 1568) {
+// ---------- Media helpers ----------
+function toJpeg(source, w, h, max) {
   const s = Math.min(1, max / Math.max(w, h));
   const c = document.createElement("canvas");
-  c.width = Math.round(w * s); c.height = Math.round(h * s);
+  c.width = Math.max(1, Math.round(w * s)); c.height = Math.max(1, Math.round(h * s));
   const ctx = c.getContext("2d");
   ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
   ctx.drawImage(source, 0, 0, c.width, c.height);
   return c.toDataURL("image/jpeg", 0.85);
 }
 
-async function imageForChat(file) {
-  if (file.type.startsWith("video/")) return extractFrame(file);
+async function getImages(file) {
+  if (file.type.startsWith("video/")) return extractFrames(file, 6);
   const bmp = await createImageBitmap(file);
-  const url = await resizeToDataURL(bmp, bmp.width, bmp.height);
+  const url = toJpeg(bmp, bmp.width, bmp.height, 1568);
   bmp.close?.();
-  return url;
-}
-async function imageToBase64(file) {
-  const url = await imageForChat(file);
-  return { b64: url.split(",")[1], mime: "image/jpeg" };
+  return [url];
 }
 
-function extractFrame(file) {
+// Ambil N frame merata dari video (tanpa upload, tanpa CORS)
+function extractFrames(file, n = 6) {
   return new Promise((resolve, reject) => {
     const v = document.createElement("video"), u = URL.createObjectURL(file);
     v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = u;
-    const done = (fn, val) => { URL.revokeObjectURL(u); fn(val); };
-    v.addEventListener("loadedmetadata", () => { v.currentTime = Math.min(1, (v.duration || 1) / 2); });
-    v.addEventListener("seeked", async () => done(resolve, await resizeToDataURL(v, v.videoWidth, v.videoHeight)), { once: true });
-    v.addEventListener("error", () => done(reject, new Error("Gagal membaca video")));
+    const fail = (msg) => { URL.revokeObjectURL(u); reject(new Error(msg)); };
+    const seek = (t) => new Promise((res, rej) => {
+      const ok = () => { v.removeEventListener("error", bad); res(); };
+      const bad = () => { v.removeEventListener("seeked", ok); rej(); };
+      v.addEventListener("seeked", ok, { once: true });
+      v.addEventListener("error", bad, { once: true });
+      v.currentTime = t;
+    });
+    v.addEventListener("error", () => fail("Gagal membaca video (codec tidak didukung browser)."), { once: true });
+    v.addEventListener("loadedmetadata", async () => {
+      try {
+        const d = isFinite(v.duration) && v.duration > 0 ? v.duration : 1;
+        const frames = [];
+        for (let i = 0; i < n; i++) {
+          await seek(Math.min(d - 0.05, Math.max(0, d * (i + 0.5) / n)));
+          frames.push(toJpeg(v, v.videoWidth, v.videoHeight, 1024));
+        }
+        URL.revokeObjectURL(u); resolve(frames);
+      } catch { fail("Gagal mengambil frame dari video."); }
+    }, { once: true });
   });
-}
-
-async function uploadGeminiVideo(key, file) {
-  const start = await fetch("https://generativelanguage.googleapis.com/upload/v1beta/files", {
-    method: "POST",
-    headers: {
-      "x-goog-api-key": key, "X-Goog-Upload-Protocol": "resumable", "X-Goog-Upload-Command": "start",
-      "X-Goog-Upload-Header-Content-Length": file.size, "X-Goog-Upload-Header-Content-Type": file.type,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ file: { display_name: file.name } }),
-  });
-  if (!start.ok) throw new Error(await readError(start, "Gagal memulai upload video"));
-  const uploadUrl = start.headers.get("X-Goog-Upload-URL");
-  if (!uploadUrl) throw new Error("URL upload tidak diterima dari Google.");
-
-  const up = await fetch(uploadUrl, {
-    method: "POST", headers: { "X-Goog-Upload-Command": "upload, finalize", "X-Goog-Upload-Offset": "0" }, body: file,
-  });
-  if (!up.ok) throw new Error(await readError(up, "Gagal upload video"));
-  let f = (await up.json()).file;
-
-  for (let i = 0; f.state === "PROCESSING" && i < 60; i++) {
-    await new Promise((r) => setTimeout(r, 2000));
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/${f.name}`, { headers: { "x-goog-api-key": key } });
-    f = await r.json();
-  }
-  if (f.state !== "ACTIVE") throw new Error("Video gagal diproses oleh Google.");
-  return { uri: f.uri, mimeType: f.mimeType };
 }
 
 // ---------- Init ----------
